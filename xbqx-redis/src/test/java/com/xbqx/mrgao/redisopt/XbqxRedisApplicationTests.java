@@ -1,0 +1,156 @@
+package com.xbqx.mrgao.redisopt;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.redis.connection.RedisStringCommands;
+import org.springframework.data.redis.core.RedisCallback;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.types.Expiration;
+
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+
+@SpringBootTest
+class XbqxRedisApplicationTests {
+
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
+
+    /**
+     * 案例描述：验证redisTemplate的setIfAbsent方法等同于SETNX
+     */
+    @Test
+    public void testSetIfAbsent() {
+        String key, value;
+
+        // 设置SETNX命令
+        key = fetchCacheKey();
+        value = key + "a";
+        Boolean success = setValue(key, value);
+        System.out.println("第一次设置值，返回结果:" + success); // 结果为true
+
+        // 第二次设置值
+        value = key + "b";
+        Boolean aBoolean = setValue(key, value);
+        System.out.println("第二次设置值，返回结果:" + aBoolean); // 结果为false
+    }
+
+    /**
+     * 案例描述：验证SETNX的过期时间
+     */
+    @Test
+    public void testSetIfAbsentExpire() throws Exception {
+        String key, value;
+
+        // SETNX 设置有效期(第一次)
+        key = fetchCacheKey();
+        value = key + "c";
+        Boolean c = setValue(key, value, 20);
+        System.out.println("设置有效期(5s)，返回结果:" + c);
+
+        // 在key相同的情况下：五秒内再次设置value值(有效期内)
+        value = key + "d";
+        Boolean d = setValue(key, value, 20);
+        System.out.println("五秒内再次设置value值，返回结果：" + d);
+
+        //延时20s(模拟key到期后的场景)
+        TimeUnit.SECONDS.sleep(20);
+
+        //在key相同的情况下：延时20s后再次设置值
+        value = key + "e";
+        Boolean e = setValue(key, value, 20);
+        System.out.println("延时20s后再次设置value值，返回结果为：" + e);
+    }
+
+    /**
+     * 案例描述：通过RedisCallback实现SETNX命令
+     */
+    @Test
+    public void testRedisCallback() throws Exception {
+        String key, value;
+
+        // SETNX 设置有效期(第一次)
+        key = fetchCacheKey();
+        value = key + "c";
+        Boolean c = setValueByRedisCallback(key, value, 20);
+        System.out.println("设置有效期(5s)，返回结果:" + c);
+
+        // 在key相同的情况下：五秒内再次设置value值(有效期内)
+        value = key + "d";
+        Boolean d = setValueByRedisCallback(key, value, 20);
+        System.out.println("五秒内再次设置value值，返回结果：" + d);
+
+        //延时20s(模拟key到期后的场景)
+        TimeUnit.SECONDS.sleep(20);
+
+        //在key相同的情况下：延时20s后再次设置值
+        value = key + "e";
+        Boolean e = setValueByRedisCallback(key, value, 20);
+        System.out.println("延时20s后再次设置value值，返回结果为：" + e);
+    }
+
+
+    /**
+     * 获取唯一Key
+     *
+     * @return
+     */
+    private String fetchCacheKey() {
+        return UUID.randomUUID().toString().replaceAll("-", "");
+    }
+
+    /**
+     * SETNX 命令
+     *
+     * @param key
+     * @param value
+     * @return
+     */
+    private Boolean setValue(String key, Object value) {
+        System.out.println("设置的key:" + key + ",设置的value:" + value);
+        Boolean absent = redisTemplate.opsForValue().setIfAbsent(key, value);
+        if (Boolean.TRUE.equals(absent)) {
+            System.out.println("当前KEY存在：" + key);
+        }
+        return absent;
+    }
+
+    /**
+     * SETNX 命令
+     *
+     * @param key
+     * @param value
+     * @return
+     */
+    private Boolean setValue(String key, Object value, long expireSeconds) {
+        System.out.println("设置的key:" + key + ",设置的value:" + value);
+        Boolean absent = redisTemplate.opsForValue().setIfAbsent(key, value, expireSeconds, TimeUnit.SECONDS);
+        if (Boolean.TRUE.equals(absent)) {
+            System.out.println("当前KEY存在：" + key);
+        }
+        return absent;
+    }
+
+    /**
+     * 通过redisTemplate的execute方法RedisCallback自定义实现
+     *
+     * @param key
+     * @param value
+     * @param expire
+     * @return
+     */
+    private Boolean setValueByRedisCallback(String key, Object value, long expire) {
+        System.out.println("设置的key:" + key + ",设置的value:" + value);
+        return redisTemplate.execute((RedisCallback<Boolean>) connection -> {
+            return connection.set(
+                    key.getBytes(),
+                    value.toString().getBytes(),
+                    Expiration.from(expire, TimeUnit.SECONDS),
+                    RedisStringCommands.SetOption.SET_IF_ABSENT
+            );
+        });
+        //return redisTemplate.execute((RedisCallback<Boolean>) connection -> connection.set(key.getBytes(),value.toString().getBytes(),Expiration.from(expire,TimeUnit.SECONDS), RedisStringCommands.SetOption.SET_IF_ABSENT));
+    }
+
+}
