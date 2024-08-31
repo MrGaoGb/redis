@@ -1,13 +1,20 @@
 package com.xbqx.mrgao.redisopt;
 
+import org.assertj.core.util.Lists;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.connection.RedisStringCommands;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.data.redis.core.types.Expiration;
+import org.springframework.scripting.support.ResourceScriptSource;
 
+import javax.annotation.PostConstruct;
+import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -153,4 +160,36 @@ class XbqxRedisApplicationTests {
         //return redisTemplate.execute((RedisCallback<Boolean>) connection -> connection.set(key.getBytes(),value.toString().getBytes(),Expiration.from(expire,TimeUnit.SECONDS), RedisStringCommands.SetOption.SET_IF_ABSENT));
     }
 
+    private DefaultRedisScript<Long> redisScript = new DefaultRedisScript();
+
+    @PostConstruct
+    public void init() {
+        redisScript = new DefaultRedisScript<>();
+        redisScript.setResultType(Long.class);
+        redisScript.setScriptSource(new ResourceScriptSource(new ClassPathResource(("redis.lua"))));
+    }
+
+    /**
+     * 运行redis lua脚本
+     */
+    @Test
+    public void testRedisLua() {
+
+        //List设置Lua的KEYS[1]
+        String key = "ip:" + System.currentTimeMillis() / 1000;
+        System.out.println(key);
+        List<String> keyList = Arrays.asList("ip:1725077293");
+        //List设置Lua的ARGV[1]
+//        List<String> argvList = Arrays.asList();
+
+        for (int i = 0; i < 30; i++) {
+            Long execute = redisTemplate.execute(redisScript, keyList, 10, 5 * 60, TimeUnit.SECONDS);
+            if (execute != null && execute == 0) {
+                System.out.println("i:" + i + "(break)==>" + execute);
+                break;
+            }
+            System.out.println("i:" + i + "==>" + execute);
+        }
+
+    }
 }
