@@ -1,0 +1,10 @@
+spring:
+  rabbitmq:
+    host: 192.168.1.228 # host主机
+    port: 5672 # 端口号 默认端口号为5672
+    username: openpay # 用户名
+    password: openpay # 密码
+#    template:
+#      mandatory: false
+    publisher-confirm-type: correlated
+    publisher-returns: true # 队列的确认  开启发送端抵达队列确认
