@@ -1,4 +1,4 @@
-package com.xbqx.mrgao.rabbitmq.producer;
+package com.xbqx.mrgao.rabbitmq.producer.exchange;
 
 import com.xbqx.mrgao.rabbitmq.constants.RabbitMQConstants;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;

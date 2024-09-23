@@ -1,4 +1,4 @@
-package com.xbqx.mrgao.rabbitmq.consumer;
+package com.xbqx.mrgao.rabbitmq.consumer.exchange;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.Exchange;
@@ -30,10 +30,10 @@ public class DirectConsumer {
      * <p>
      * 一旦生产者向交换机directExchange发送消息，并指定routing key为“rk.001”，消费者consumer就可以消费消息了。
      */
-    @RabbitListener(bindings = {@QueueBinding(value = @Queue("queue.test.001"), // 消息队列名称
-            exchange = @Exchange("directExchange"), // 交换机
-            key = {"rk.001"} // 路由Routing KEY
-    )})
+    //@RabbitListener(bindings = {@QueueBinding(value = @Queue("queue.test.001"), // 消息队列名称
+    //        exchange = @Exchange("directExchange"), // 交换机
+    //        key = {"rk.001"} // 路由Routing KEY
+    //)})
     public void consumerProcess001(String message) {
         log.info(">>>>> (001队列)receive: {}", message);
     }
@@ -43,10 +43,10 @@ public class DirectConsumer {
      *
      * @param message
      */
-    @RabbitListener(bindings = {@QueueBinding(value = @Queue("queue.test.002"), // 消息队列名称
-            exchange = @Exchange("directExchange"), // 交换机
-            key = {"rk.001"} // 路由Routing KEY
-    )})
+    //@RabbitListener(bindings = {@QueueBinding(value = @Queue("queue.test.002"), // 消息队列名称
+    //        exchange = @Exchange("directExchange"), // 交换机
+    //        key = {"rk.001"} // 路由Routing KEY
+    //)})
     public void consumerProcess002(String message) {
         log.info(">>>>> (002队列)receive: {}", message);
     }

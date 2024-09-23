@@ -4,7 +4,15 @@ spring:
     port: 5672 # 端口号 默认端口号为5672
     username: openpay # 用户名
     password: openpay # 密码
-#    template:
-#      mandatory: false
-    publisher-confirm-type: correlated
+    template:
+      mandatory: true
+    publisher-confirm-type: simple
     publisher-returns: true # 队列的确认  开启发送端抵达队列确认
+    listener:
+      direct:
+        acknowledge-mode: auto # 通过配置指定消息应答模式,该模式值为三种 auto(自动)、MANUAL(手动)、NONE(无)
+      simple:
+        retry:
+          enabled: true # 开启消费者重试
+          max-attempts: 5 # 最大尝试次数为3次
+          initial-interval: 5000 # 重试间隔时间

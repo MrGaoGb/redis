@@ -1,4 +1,4 @@
-package com.xbqx.mrgao.rabbitmq.producer;
+package com.xbqx.mrgao.rabbitmq.producer.exchange;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;

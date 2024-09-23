@@ -1,14 +1,20 @@
 package com.xbqx.mrgao.rabbitmq;
 
-import com.xbqx.mrgao.rabbitmq.producer.DirectProducer;
-import com.xbqx.mrgao.rabbitmq.producer.FanoutProducer;
-import com.xbqx.mrgao.rabbitmq.producer.HeadersProducer;
-import com.xbqx.mrgao.rabbitmq.producer.TopicProducer;
+import com.xbqx.mrgao.rabbitmq.entity.OrderInf;
+import com.xbqx.mrgao.rabbitmq.producer.exchange.DirectProducer;
+import com.xbqx.mrgao.rabbitmq.producer.exchange.FanoutProducer;
+import com.xbqx.mrgao.rabbitmq.producer.exchange.HeadersProducer;
+import com.xbqx.mrgao.rabbitmq.producer.exchange.TopicProducer;
+import com.xbqx.mrgao.rabbitmq.producer.messageconfirm.AutoProducer;
+import com.xbqx.mrgao.rabbitmq.producer.messageconfirm.ManualProducer;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @SpringBootTest(classes = XbqxMiddleRabbitmqApplication.class)
 @RunWith(value = SpringJUnit4ClassRunner.class)
@@ -66,5 +72,41 @@ public class XbqxMiddleRabbitmqApplicationTests {
         headersProducer.send1();
         headersProducer.send2();
         headersProducer.send3();
+    }
+
+    @Autowired
+    private ManualProducer manualProducer;
+
+    @Test
+    public void testManualConfirmMessage() {
+        OrderInf o = new OrderInf();
+        o.setId("0000000001");
+        o.setType(1);
+        o.setMoney(BigDecimal.TEN);
+        o.setNow(LocalDateTime.now());
+        manualProducer.sendConfirm(o);
+    }
+
+    @Autowired
+    private AutoProducer autoProducer;
+
+    @Test
+    public void testAutoConfirmMessage() {
+        autoProducer.sendAuto();
+    }
+
+
+    /**
+     * 发布者确认：
+     * <p>
+     * TODO yml中配置：
+     * spring.rabbitmq.publisher-confirm-type=correlated
+     * spring.rabbitmq.template.mandatory=true
+     * </p>
+     */
+    @Test
+    public void testPublisherConfirmMessage() {
+        autoProducer.sendAuto();
+        autoProducer.sendAuto2();
     }
 }
