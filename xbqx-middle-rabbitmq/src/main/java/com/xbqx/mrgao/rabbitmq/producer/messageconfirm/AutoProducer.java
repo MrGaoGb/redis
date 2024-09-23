@@ -5,6 +5,8 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.UUID;
+
 /**
  * @author Mr.Gao
  * @apiNote: 消息确认之自动应答
@@ -18,7 +20,8 @@ public class AutoProducer {
     private RabbitTemplate rabbitTemplate;
 
     public void sendAuto() {
-        rabbitTemplate.convertAndSend("directAutoExchange", "auto.rk001", "这是Auto消息确认下发送的消息");
+        String msg = UUID.randomUUID().toString().replace("-", "");
+        rabbitTemplate.convertAndSend("directAutoExchange", "auto.rk", "AUTO_" + msg);
     }
 
     public void sendAuto2() {
