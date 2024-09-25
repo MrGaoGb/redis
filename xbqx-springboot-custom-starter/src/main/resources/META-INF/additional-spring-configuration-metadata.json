@@ -1,0 +1,40 @@
+{
+  "properties": [
+    {
+      "name": "redission.enabled",
+      "defaultValue": false,
+      "type": "java.lang.Boolean",
+      "description": "开启Redission配置的支持"
+    },
+    {
+      "name": "jack.redis.username",
+      "defaultValue": "admin",
+      "type": "java.lang.String",
+      "description": "用户名"
+    },
+    {
+      "name": "jack.redis.password",
+      "defaultValue": "123456",
+      "type": "java.lang.String",
+      "description": "用户Redis密码"
+    },
+    {
+      "name": "jack.redis.host",
+      "defaultValue": "localhost",
+      "type": "java.lang.String",
+      "description": "host主机"
+    },
+    {
+      "name": "jack.redis.port",
+      "defaultValue": "6379",
+      "type": "java.lang.Integer",
+      "description": "端口号:默认6379"
+    },
+    {
+      "name": "jack.redis.timeout",
+      "defaultValue": "5000",
+      "type": "java.lang.Integer",
+      "description": "默认超时时间5s"
+    }
+  ]
+}
