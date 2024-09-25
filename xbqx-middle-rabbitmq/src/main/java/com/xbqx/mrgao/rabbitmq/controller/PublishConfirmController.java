@@ -17,7 +17,7 @@ import java.util.UUID;
 
 /**
  * @author Mr.Gao
- * @apiNote:
+ * @apiNote:RabbitMQ中的Confirm机制
  * @date 2024/9/23 17:00
  */
 @Slf4j
