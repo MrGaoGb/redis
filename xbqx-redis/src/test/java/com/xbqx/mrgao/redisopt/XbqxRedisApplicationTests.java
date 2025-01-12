@@ -1,7 +1,8 @@
 package com.xbqx.mrgao.redisopt;
 
-import org.assertj.core.util.Lists;
 import org.junit.jupiter.api.Test;
+import org.redisson.api.RBloomFilter;
+import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
@@ -13,6 +14,7 @@ import org.springframework.data.redis.core.types.Expiration;
 import org.springframework.scripting.support.ResourceScriptSource;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -190,6 +192,30 @@ class XbqxRedisApplicationTests {
             }
             System.out.println("i:" + i + "==>" + execute);
         }
+
+    }
+
+    @Resource
+    private RedissonClient redissonClient;
+
+    /**
+     * 案例描述：布隆过滤器实现之Redisson
+     */
+    @Test
+    public void testBloomFilter() {
+        RBloomFilter<Object> bloomFilter = redissonClient.getBloomFilter("prd_key");
+        bloomFilter.tryInit(1000, 0.03);
+
+        for (int i = 0; i < 1000; i++) {
+            bloomFilter.add("小玥玥" + i);
+        }
+
+        System.out.println("'小玥玥1'是否存在:" + bloomFilter.contains("小玥玥" + 1));
+        System.out.println("'海贼王'是否存在:" + bloomFilter.contains("海贼王"));
+        System.out.println("预计插入的数量:" + bloomFilter.getExpectedInsertions());
+        System.out.println("容错率:" + bloomFilter.getFalseProbability());
+        System.out.println("hash函数的个数:" + bloomFilter.getHashIterations());
+        System.out.println("插入对象的个数:" + bloomFilter.count());
 
     }
 }

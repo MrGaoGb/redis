@@ -27,7 +27,7 @@ import java.lang.reflect.Method;
 @Order(2)
 public class RedissonRequestLockAspect {
 
-    private RedissonClient redissonClient;
+    private final RedissonClient redissonClient;
 
     @Autowired
     public RedissonRequestLockAspect(RedissonClient redissonClient) {
