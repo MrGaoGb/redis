@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: xbqx-springboot
+ # ??????
+  profiles:
+    active: local
