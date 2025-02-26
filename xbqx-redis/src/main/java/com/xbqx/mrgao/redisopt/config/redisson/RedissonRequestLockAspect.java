@@ -5,6 +5,7 @@ import com.xbqx.mrgao.redisopt.annotation.RequestLock;
 import com.xbqx.mrgao.redisopt.exception.BizException;
 import com.xbqx.mrgao.redisopt.exception.ResponseCodeEnum;
 import com.xbqx.mrgao.redisopt.utils.RequestKeyGenerator;
+import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -12,8 +13,8 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Method;
 
@@ -22,8 +23,9 @@ import java.lang.reflect.Method;
  * @date 2024/8/15 14:00
  * @apiNote:分布式锁实现
  */
+@Slf4j
 @Aspect
-@Configuration
+@Component
 @Order(2)
 public class RedissonRequestLockAspect {
 
@@ -52,6 +54,7 @@ public class RedissonRequestLockAspect {
             isLocked = lock.tryLock();
             //没有拿到锁说明已经有了请求了
             if (!isLocked) {
+                log.info("当前锁被占用了!");
                 throw new BizException(ResponseCodeEnum.BIZ_CHECK_FAIL, "您的操作太快了,请稍后重试");
             }
             //拿到锁后设置过期时间
@@ -62,7 +65,7 @@ public class RedissonRequestLockAspect {
                 throw new BizException(ResponseCodeEnum.BIZ_CHECK_FAIL, "系统异常");
             }
         } catch (Exception e) {
-            throw new BizException(ResponseCodeEnum.BIZ_CHECK_FAIL, "您的操作太快了,请稍后重试");
+            throw e;
         } finally {
             //释放锁
             if (isLocked && lock.isHeldByCurrentThread()) {

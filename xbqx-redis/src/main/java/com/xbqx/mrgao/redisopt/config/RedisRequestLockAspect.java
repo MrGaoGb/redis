@@ -5,6 +5,7 @@ import com.xbqx.mrgao.redisopt.annotation.RequestLock;
 import com.xbqx.mrgao.redisopt.exception.BizException;
 import com.xbqx.mrgao.redisopt.exception.ResponseCodeEnum;
 import com.xbqx.mrgao.redisopt.utils.RequestKeyGenerator;
+import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -24,9 +25,10 @@ import java.lang.reflect.Method;
  * @date 2024/8/15 11:49
  * @apiNote:缓存实现
  */
+@Slf4j
 @Aspect
-@Component
-@Order(2)
+//@Component
+//@Order(2)
 public class RedisRequestLockAspect {
 
     private final StringRedisTemplate stringRedisTemplate;
@@ -48,8 +50,9 @@ public class RedisRequestLockAspect {
         //获取自定义key
         final String lockKey = RequestKeyGenerator.getLockKey(joinPoint);
         // 使用RedisCallback接口执行set命令，设置锁键；设置额外选项：过期时间和SET_IF_ABSENT选项
-        final Boolean success = stringRedisTemplate.execute((RedisCallback<Boolean>) connection -> connection.set(lockKey.getBytes(), new byte[0], Expiration.from(requestLock.expire(), requestLock.timeUnit()), RedisStringCommands.SetOption.SET_IF_ABSENT));
-        if (!success) {
+        final Boolean success = stringRedisTemplate.execute((RedisCallback<Boolean>) connection -> connection.set(lockKey.getBytes(), lockKey.getBytes(), Expiration.from(requestLock.expire(), requestLock.timeUnit()), RedisStringCommands.SetOption.SET_IF_ABSENT));
+        log.info("缓存KEY返回结果:{}", success);
+        if (null != success && !success) {
             throw new BizException(ResponseCodeEnum.BIZ_CHECK_FAIL, "您的操作太快了,请稍后重试");
         }
         try {
