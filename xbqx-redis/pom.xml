@@ -33,8 +33,7 @@
         <!--引入redis-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-redis</artifactId>
-            <version>1.4.2.RELEASE</version>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
         </dependency>
         <!--fastjson-->
         <dependency>
@@ -54,11 +53,11 @@
             <artifactId>spring-boot-starter-aop</artifactId>
         </dependency>
         <!--分布式锁实现-->
-        <dependency>
+<!--        <dependency>
             <groupId>org.redisson</groupId>
             <artifactId>redisson-spring-boot-starter</artifactId>
             <version>3.10.6</version>
-        </dependency>
+        </dependency>-->
 
     </dependencies>
     <dependencyManagement>

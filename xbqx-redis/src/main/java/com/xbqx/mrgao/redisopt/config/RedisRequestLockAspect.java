@@ -10,13 +10,10 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.annotation.Order;
 import org.springframework.data.redis.connection.RedisStringCommands;
 import org.springframework.data.redis.core.RedisCallback;
-import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.types.Expiration;
-import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Method;
 
@@ -27,15 +24,12 @@ import java.lang.reflect.Method;
  */
 @Slf4j
 @Aspect
-//@Component
-//@Order(2)
 public class RedisRequestLockAspect {
 
-    private final StringRedisTemplate stringRedisTemplate;
+    private final RedisTemplate<String, String> redisTemplate;
 
-    @Autowired
-    public RedisRequestLockAspect(StringRedisTemplate stringRedisTemplate) {
-        this.stringRedisTemplate = stringRedisTemplate;
+    public RedisRequestLockAspect(RedisTemplate<String, String> redisTemplate) {
+        this.redisTemplate = redisTemplate;
     }
 
     @Around("execution(public * * (..)) && @annotation(com.xbqx.mrgao.redisopt.annotation.RequestLock)")
@@ -50,7 +44,12 @@ public class RedisRequestLockAspect {
         //获取自定义key
         final String lockKey = RequestKeyGenerator.getLockKey(joinPoint);
         // 使用RedisCallback接口执行set命令，设置锁键；设置额外选项：过期时间和SET_IF_ABSENT选项
-        final Boolean success = stringRedisTemplate.execute((RedisCallback<Boolean>) connection -> connection.set(lockKey.getBytes(), lockKey.getBytes(), Expiration.from(requestLock.expire(), requestLock.timeUnit()), RedisStringCommands.SetOption.SET_IF_ABSENT));
+        Boolean success = redisTemplate.execute((RedisCallback<Boolean>) connection ->
+                connection.set(lockKey.getBytes(), lockKey.getBytes(), Expiration.from(requestLock.expire(), requestLock.timeUnit()), RedisStringCommands.SetOption.ifAbsent())
+        );
+
+        // 采用redisTemplate的setIfAbsent方法
+        //Boolean success = redisTemplate.opsForValue().setIfAbsent(lockKey, lockKey, requestLock.expire(), requestLock.timeUnit());
         log.info("缓存KEY返回结果:{}", success);
         if (null != success && !success) {
             throw new BizException(ResponseCodeEnum.BIZ_CHECK_FAIL, "您的操作太快了,请稍后重试");

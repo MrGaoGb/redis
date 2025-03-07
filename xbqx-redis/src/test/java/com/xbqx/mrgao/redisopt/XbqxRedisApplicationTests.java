@@ -1,20 +1,18 @@
 package com.xbqx.mrgao.redisopt;
 
 import org.junit.jupiter.api.Test;
-import org.redisson.api.RBloomFilter;
-import org.redisson.api.RedissonClient;
+//import org.redisson.api.RBloomFilter;
+//import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.data.redis.connection.RedisStringCommands;
-import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
-import org.springframework.data.redis.core.types.Expiration;
 import org.springframework.scripting.support.ResourceScriptSource;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -23,8 +21,11 @@ import java.util.concurrent.TimeUnit;
 @SpringBootTest
 class XbqxRedisApplicationTests {
 
+    //@Autowired
+    //private RedisTemplate<String, Object> redisTemplate;
     @Autowired
-    private RedisTemplate<String, Object> redisTemplate;
+    private RedisTemplate<String, String> redisTemplate;
+
 
     /**
      * 案例描述：验证redisTemplate的setIfAbsent方法等同于SETNX
@@ -55,21 +56,24 @@ class XbqxRedisApplicationTests {
         // SETNX 设置有效期(第一次)
         key = fetchCacheKey();
         value = key + "c";
-        Boolean c = setValue(key, value, 20);
+        Boolean c = setValue(key, value, 10);
         System.out.println("设置有效期(5s)，返回结果:" + c);
 
-        // 在key相同的情况下：五秒内再次设置value值(有效期内)
+        // 延时2s
+        TimeUnit.SECONDS.sleep(2);
+
+        //// 在key相同的情况下：五秒内再次设置value值(有效期内)
         value = key + "d";
         Boolean d = setValue(key, value, 20);
         System.out.println("五秒内再次设置value值，返回结果：" + d);
-
-        //延时20s(模拟key到期后的场景)
-        TimeUnit.SECONDS.sleep(20);
-
-        //在key相同的情况下：延时20s后再次设置值
-        value = key + "e";
-        Boolean e = setValue(key, value, 20);
-        System.out.println("延时20s后再次设置value值，返回结果为：" + e);
+        //
+        ////延时20s(模拟key到期后的场景)
+        //TimeUnit.SECONDS.sleep(20);
+        //
+        ////在key相同的情况下：延时20s后再次设置值
+        //value = key + "e";
+        //Boolean e = setValue(key, value, 20);
+        //System.out.println("延时20s后再次设置value值，返回结果为：" + e);
     }
 
     /**
@@ -82,7 +86,7 @@ class XbqxRedisApplicationTests {
         // SETNX 设置有效期(第一次)
         key = fetchCacheKey();
         value = key + "c";
-        Boolean c = setValueByRedisCallback(key, value, 20);
+        Boolean c = setValueByRedisCallback(key, value, 5);
         System.out.println("设置有效期(5s)，返回结果:" + c);
 
         // 在key相同的情况下：五秒内再次设置value值(有效期内)
@@ -91,12 +95,12 @@ class XbqxRedisApplicationTests {
         System.out.println("五秒内再次设置value值，返回结果：" + d);
 
         //延时20s(模拟key到期后的场景)
-        TimeUnit.SECONDS.sleep(20);
+        //TimeUnit.SECONDS.sleep(20);
 
         //在key相同的情况下：延时20s后再次设置值
-        value = key + "e";
-        Boolean e = setValueByRedisCallback(key, value, 20);
-        System.out.println("延时20s后再次设置value值，返回结果为：" + e);
+        //value = key + "e";
+        //Boolean e = setValueByRedisCallback(key, value, 20);
+        //System.out.println("延时20s后再次设置value值，返回结果为：" + e);
     }
 
 
@@ -118,7 +122,7 @@ class XbqxRedisApplicationTests {
      */
     private Boolean setValue(String key, Object value) {
         System.out.println("设置的key:" + key + ",设置的value:" + value);
-        Boolean absent = redisTemplate.opsForValue().setIfAbsent(key, value);
+        Boolean absent = redisTemplate.opsForValue().setIfAbsent(key, value.toString());
         if (Boolean.TRUE.equals(absent)) {
             System.out.println("当前KEY存在：" + key);
         }
@@ -134,12 +138,13 @@ class XbqxRedisApplicationTests {
      */
     private Boolean setValue(String key, Object value, long expireSeconds) {
         System.out.println("设置的key:" + key + ",设置的value:" + value);
-        Boolean absent = redisTemplate.opsForValue().setIfAbsent(key, value, expireSeconds, TimeUnit.SECONDS);
+        Boolean absent = redisTemplate.opsForValue().setIfAbsent(key, value.toString(), expireSeconds, TimeUnit.SECONDS);
         if (Boolean.TRUE.equals(absent)) {
             System.out.println("当前KEY存在：" + key);
         }
         return absent;
     }
+
 
     /**
      * 通过redisTemplate的execute方法RedisCallback自定义实现
@@ -151,15 +156,16 @@ class XbqxRedisApplicationTests {
      */
     private Boolean setValueByRedisCallback(String key, Object value, long expire) {
         System.out.println("设置的key:" + key + ",设置的value:" + value);
-        return redisTemplate.execute((RedisCallback<Boolean>) connection -> {
-            return connection.set(
-                    key.getBytes(),
-                    value.toString().getBytes(),
-                    Expiration.from(expire, TimeUnit.SECONDS),
-                    RedisStringCommands.SetOption.SET_IF_ABSENT
-            );
-        });
-        //return redisTemplate.execute((RedisCallback<Boolean>) connection -> connection.set(key.getBytes(),value.toString().getBytes(),Expiration.from(expire,TimeUnit.SECONDS), RedisStringCommands.SetOption.SET_IF_ABSENT));
+        //byte[] lockKeyBytes = redisTemplate.getStringSerializer().serialize(key);
+        //if (lockKeyBytes == null) {
+        //    throw new IllegalStateException("lockKeyBytes 为空!");
+        //}
+        //redisTemplate.setKeySerializer(new StringRedisSerializer());
+        //redisTemplate.setValueSerializer(new GenericJackson2JsonRedisSerializer());
+        //return redisTemplate.opsForValue().setIfAbsent(key, value, expire, TimeUnit.SECONDS);
+        //return redisTemplate.opsForValue().setIfAbsent(key, value/*, expire, TimeUnit.SECONDS*/);
+
+        return redisTemplate.opsForValue().setIfAbsent(key, value.toString(), Duration.ofSeconds(expire));
     }
 
     private DefaultRedisScript<Long> redisScript = new DefaultRedisScript();
@@ -195,27 +201,27 @@ class XbqxRedisApplicationTests {
 
     }
 
-    @Resource
-    private RedissonClient redissonClient;
-
-    /**
-     * 案例描述：布隆过滤器实现之Redisson
-     */
-    @Test
-    public void testBloomFilter() {
-        RBloomFilter<Object> bloomFilter = redissonClient.getBloomFilter("prd_key");
-        bloomFilter.tryInit(1000, 0.03);
-
-        for (int i = 0; i < 1000; i++) {
-            bloomFilter.add("小玥玥" + i);
-        }
-
-        System.out.println("'小玥玥1'是否存在:" + bloomFilter.contains("小玥玥" + 1));
-        System.out.println("'海贼王'是否存在:" + bloomFilter.contains("海贼王"));
-        System.out.println("预计插入的数量:" + bloomFilter.getExpectedInsertions());
-        System.out.println("容错率:" + bloomFilter.getFalseProbability());
-        System.out.println("hash函数的个数:" + bloomFilter.getHashIterations());
-        System.out.println("插入对象的个数:" + bloomFilter.count());
-
-    }
+    //@Resource
+    //private RedissonClient redissonClient;
+    //
+    ///**
+    // * 案例描述：布隆过滤器实现之Redisson
+    // */
+    //@Test
+    //public void testBloomFilter() {
+    //    RBloomFilter<Object> bloomFilter = redissonClient.getBloomFilter("prd_key");
+    //    bloomFilter.tryInit(1000, 0.03);
+    //
+    //    for (int i = 0; i < 1000; i++) {
+    //        bloomFilter.add("小玥玥" + i);
+    //    }
+    //
+    //    System.out.println("'小玥玥1'是否存在:" + bloomFilter.contains("小玥玥" + 1));
+    //    System.out.println("'海贼王'是否存在:" + bloomFilter.contains("海贼王"));
+    //    System.out.println("预计插入的数量:" + bloomFilter.getExpectedInsertions());
+    //    System.out.println("容错率:" + bloomFilter.getFalseProbability());
+    //    System.out.println("hash函数的个数:" + bloomFilter.getHashIterations());
+    //    System.out.println("插入对象的个数:" + bloomFilter.count());
+    //
+    //}
 }

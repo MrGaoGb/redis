@@ -1,8 +1,8 @@
 package com.xbqx.mrgao.redisopt.controller;
 
 import com.xbqx.mrgao.redisopt.annotation.RequestLock;
-import com.xbqx.mrgao.redisopt.pojo.req.LimitDto;
 import com.xbqx.mrgao.redisopt.pojo.ResponseData;
+import com.xbqx.mrgao.redisopt.pojo.req.LimitDto;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -24,5 +24,12 @@ public class RequestController {
         return ResponseData.success("10000000000000000");
     }
 
+    /**
+     * 测试返回响应码
+     */
+    @PostMapping("/testVerifyRespCode")
+    public void testVerifyRespCode() {
+        System.out.println("测试返回响应码");
+    }
 
 }
